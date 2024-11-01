@@ -1965,7 +1965,990 @@ SELECT * FROM TopCategories;
 -- ----------------------------------------------------------------------------------------------------------------------------
 
 -- ----------------------------------------------------------------------------------------------------------------------------
+use practiceset;
 
+--  List all the columns of the Salespeople table 	
+select * from salespeople;
+
+select * from customers;
+
+select * from orders;
+
+
+ -- 2. List all customers with a rating of 100. 
+ select * from customers
+ where rating = 100;
+ 
+ /*
+ CNUM, CNAME, CITY, RATING, SNUM
+ 2001	Hoffman	London	100	1001
+2006	Clemens	London	100	1001
+2007	Pereira	Rome	100	1004
+				*/
+-- 3. Find all records in the Customer table with NULL values in the city column.
+select * from customers
+where city = NULL;
+
+-- 4.Find the largest order taken by each salesperson on each date. 
+
+select s.sname, o.odate, max(o.amt) as Largest_order
+from salespeople s 
+left join orders o on s.snum = o.snum
+group by o.odate,s.sname;
+
+-- 5. Arrange the Orders table by descending customer number.
+
+select * from orders
+order by cnum desc;
+
+-- 6. Find which salespeople currently have orders in the Orders table. 
+
+select DISTINCT s.sname
+from salespeople s 
+right join orders o on s.snum = o.snum ;
+
+-- 7. List names of all customers matched with the salespeople serving them. 
+
+select c.cname Customer_Name , s.sname SalesPerson_name
+from customers c 
+left join salespeople s on c.snum = s.snum;
+
+-- 8. Find the names and numbers of all salespeople who had more than one customer. 
+select s.snum, s.sname, count(*) Total_Customers
+from salespeople s 
+left join customers c on c.snum = s.snum
+group by s.snum, s.sname
+having Total_Customers > 1;
+
+-- 9. Count the orders of each of the salespeople and output the results in descending order.
+select s.sname, count(o.onum) as Total_Orders
+from salespeople s 
+right join orders o on s.snum = o.snum
+group by s.sname
+order by Total_orders desc;
+
+-- 10. List the Customer table if and only if one or more of the customers in the Customer table are located in San Jose. 
+
+select distinct c1.cname from customers c1
+join customers c2 on c2.city = c1.city
+where exists (select c1.cname from customers where city = 'San Jose' group by cname having count(cname) >= 1);
+
+-- 11. Match salespeople to customers according to what city they lived in. 
+select s.sname SalesPerson, c.cname CustomerName, c.city
+from salespeople s 
+inner join customers c on s.city = c.city;
+
+-- 12. Find the largest order taken by each salesperson. 
+
+select s.snum, s.sname, max(o.amt) as Largest_Order
+from salespeople s 
+left join orders o on s.snum = o.snum 
+group by s.snum, s.sname
+order by max(o.amt) desc;
+
+-- 13.13. Find customers in San Jose who have a rating above 200. 
+
+select c.cname
+from customers c 
+where city = 'San Jose' and rating > 200;
+
+-- 14. List the names and commissions of all salespeople in London. 
+
+select s.sname, s.comm from salespeople s
+where city = 'London';
+
+-- 15. List all the orders of salesperson Motika from the Orders table. 
+
+select o.onum, o.amt, o.odate, o.cnum from orders o 
+left join salespeople s using(snum)
+where s.sname = 'Motika';
+
+-- 16. Find all customers with orders on October 3. 
+
+select c.cname, o.odate from customers c 
+left join orders o using(cnum)
+where o.odate = "1996-10-03";
+
+-- Hemants code
+select * from 
+customers 
+left join orders ON orders.cnum = customers.cnum
+where orders.odate = '1996-10-03';
+
+-- 17. Give the sums of the amounts from the Orders table, grouped by date, eliminating all those dates where the SUM was not at least 2000.00 above the MAX amount. 
+
+select  o.odate, round(sum(o.amt),2) as Sum_Order
+from orders o 
+group by o.odate
+having sum(o.amt) > (2000 + max(amt));
+-- need to build logic 
+;
+
+-- 18 18. Select all orders that had amounts that were greater than at least one of the orders from October 6. 
+
+select * from orders o 
+where amt > (select min(amt) from orders where odate = '1996-10-03');
+
+select * from orders o 
+where amt > any(select amt from orders where odate = '1996-10-03');
+
+-- 19 Write a query that uses the EXISTS operator to extract all salespeople who have customers with a rating of 300.
+				   -- err
+SELECT * FROM Salespeople s
+where exists (select snum from customers c 
+				where c.rating = 300);
+                   -- err
+                
+select * from salespeople s where exists(select 1 from customers c where c.snum = s.snum and rating=300);
+             
+                
+-- 20. Find all pairs of customers having the same rating.
+
+select DISTINCT c1.cname as Pair1, c2.cname as Pair2, c1.rating
+from customers c1
+inner join customers c2 using(rating)
+where c1.cname != c2.cname;
+
+
+-- 21.Find all customers whose CNUM is 1000 above the SNUM of Serres.
+
+SELECT *
+FROM customers c
+WHERE c.cnum > 1000+(SELECT snum FROM salespeople WHERE sname = 'serres'
+);
+
+-- 22. Give the salespeople’s commissions as percentages instead of decimal numbers.
+
+select sname, comm*100 as Percentage_Commission
+from salespeople;
+
+-- 23. Find the largest order taken by each salesperson on each date, eliminating those MAX orders which are less than $3000.00 in value.
+
+select s.snum, s.sname,  o.onum, max(o.amt) as largest_Order
+from salespeople s 
+right join orders o using(snum)
+where o.amt > 3000
+group by s.snum, s.sname,  o.onum;
+
+
+-- 24 24. List the largest orders for October 3, for each salesperson.
+
+select s.snum SalesPerID, s.sname SalesPerson, max(o.amt) as Largest_Order_Amount
+from salespeople s 
+left join orders o on s.snum = o.snum 
+where o.odate = '1996-10-03'
+group by s.snum, s.sname
+order by max(o.amt) desc;
+
+-- 25. 25. Find all customers located in cities where Serres (SNUM 1002) has customers.
+
+select c.cname, c.city from customers c 
+right join salespeople s using(snum)
+where s.sname = "Serres";
+
+-- 26. Select all customers with a rating above 200.00.
+
+select * from customers 
+where rating > 200;
+
+-- 27. Count the number of salespeople currently listing orders in the Orders table.
+-- Find which salespeople currently have orders in the Orders table.
+select count(*) SalesPersonCount 
+from salespeople s 
+right join orders o on s.snum = o.snum ;
+
+-- 28. Write a query that produces all customers serviced by salespeople with a commission above 12%. Output the customer’s name and the salesperson’s rate of commission.
+
+select c.cname Customername, s.sname SalesPerson, s.comm Comission from salespeople s 
+left join customers c using(snum)
+where s.comm > 0.12;
+
+-- 29. Find salespeople who have multiple customers.
+
+select s1.sname, c.cname from salespeople s1 
+join customers c using(snum)
+where s1.snum = c.snum;
+
+-- 30. Find salespeople with customers located in their city.
+
+select s.sname,c.cname, c.city from salespeople s 
+left join customers c using(snum);
+
+-- 31 Find all salespeople whose name starts with ‘P’ and the fourth character is ‘l’.
+
+select s.sname from salespeople s 
+where s.sname LIKE "P__l%";
+
+-- 32 32. Write a query that uses a subquery to obtain all orders for the customer named Cisneros. Assume you do not know his customer number. 
+
+select * from orders o 
+where o.cnum in (select cnum from customers  where cname ='Cisneros');
+
+-- 33. Find the largest orders for Serres and Rifkin. 
+
+select s.sname, max(o.amt) as LargestOrders 
+from orders o 
+inner join salespeople s using(snum)
+where s.sname in ('Serres', 'Rifkin')
+group by s.sname;
+
+-- 34 34. Extract the Salespeople table in the following order : SNUM, SNAME, COMMISSION, CITY
+
+select snum, sname, comm, city 
+from salespeople s;
+
+-- 35. Select all customers whose names fall in between ‘A’ and ‘G’ alphabetical range. 
+
+SELECT * 
+FROM customers 
+WHERE cname >= 'A' AND cname < 'H';
+
+	-- another query for the same 
+	select * from customers where left(cname, 1) between 'A' and 'G';
+
+-- 36. Select all the possible combinations of customers that you can assign.
+
+select C1.cname AS customer1, C2.cname AS customer2
+from customers C1
+cross JOIN customers C2;
+
+-- 37. Select all orders that are greater than the average for October 4. 
+
+select o.onum, o.amt, o.odate
+from orders o 
+where  o.amt > (select avg(amt) from orders where o.odate = '1996-10-04');
+
+
+-- 38. Write a select command using a corelated subquery that selects the names and numbers of all customers with ratings equal to the maximum for their city
+
+select c.cname, c.cnum, c.rating, c.city
+from  customers c
+where c.rating = (
+    select MAX(c2.rating)
+    from customers c2
+    where c2.city = c.city
+);
+
+-- 39. Write a query that totals the orders for each day and places the results in descending order.
+select o.odate, count(*) OrdersCount 
+from orders o
+group by o.odate
+order by OrdersCount DESC;
+
+-- 41. Find all orders with amounts smaller than any amount for a customer in San Jose.
+
+SELECT *, c.city
+FROM orders o
+INNER JOIN customers c using(cnum)
+WHERE o.amt < (
+    SELECT max(o2.amt)
+    FROM orders o2
+    JOIN customers c ON o2.cnum = c.cnum
+    WHERE c.city = 'San Jose'
+);
+-- 42. Find all orders with above average amounts for their customers.
+
+SELECT o.*
+FROM orders o
+WHERE o.amt > (
+    SELECT AVG(o2.amt)
+    FROM orders o2
+    WHERE o2.cnum = o.cnum
+);
+
+-- 43. Write a query that selects the highest rating in each city.
+
+select city, max(rating) HighestRating
+from customers
+group by city
+order by HighestRating DESC;
+
+-- 44. Write a query that calculates the amount of the salesperson’s commission on each order by a customer with a rating above 100.00.
+
+SELECT 
+    s.sname,
+    round(sum((o.amt * s.comm)),2) AS commission_amount
+FROM orders o
+JOIN customers c ON o.cnum = c.cnum
+JOIN salespeople s ON o.snum = s.snum
+WHERE c.rating > 100.00
+group by s.sname;
+
+-- 45. Count the customers with ratings above San Jose’s average.
+
+select count(*) CountCustomers, rating
+from customers 
+where rating > (select avg(rating) from customers where city = 'San Jose')
+group by rating;
+
+-- 46. Write a query that produces all pairs of salespeople with themselves as well as duplicate rows with the order reversed.
+
+select s1.sname, s2.sname
+from salespeople s1
+join salespeople s2;
+
+
+
+-- 47. Find all salespeople that are located in either Barcelona or London.
+
+select sname,  city
+from salespeople
+where city in ('Barcelona', 'London');
+
+-- 48. Find all salespeople with only one customer.
+
+select s.sname, count(*) as COunt
+from salespeople s 
+right join customers c using(snum)
+group by s.sname
+having COunt = 1;
+
+-- 49. Write a query that joins the Customer table to itself to find all pairs of customers served by a single salesperson.
+
+select c1.cnum AS Customer1, c2.cnum AS Customer2, c1.snum
+from Customers c1
+join Customers c2
+on c1.snum = c2.snum  
+and c1.cnum < c2.cnum        
+ORDER BY c1.snum, c1.cnum, c2.cnum;
+
+-- 50. Write a query that will give you all orders for more than $1000.00
+
+select * from orders 
+where amt > 1000;
+
+-- 51. Write a query that lists each order number followed by the name of the customer who made that order.
+
+select distinct o.onum OrderNumber, c.cnum CustomerNUmber
+from orders o 
+inner join customers c using(cnum);
+
+-- 52. Write 2 queries that select all salespeople (by name and number) who have customers in their cities who they do not service, one using a join and one a corelated subquery. Which solution is more elegant?
+
+select distinct s.snum, s.sname
+from Salespeople s
+join Customers c 
+on s.City = c.City 
+and s.snum <> c.snum;
+
+-- 53. Write a query that selects all customers whose ratings are equal to or greater than ANY (in the SQL sense) of Serres’?
+
+select * from customers
+where rating >= any (
+    select rating
+    from customers
+    where snum = (
+		select snum 
+		from salespeople
+		where sname = 'Serres'
+    )
+);
+
+-- 54. Write 2 queries that will produce all orders taken on October 3 or October 4.
+
+
+select * from orders 
+where odate in ('1996-10-03', '1996-10-04');
+
+select  *from  orders
+where odate = '1996-10-03' 
+   or odate = '1996-10-04';
+
+-- 55. Write a query that produces all pairs of orders by a given customer. Name that customer and eliminate duplicates.
+
+select c.cname, o1.onum AS Order1, o2.onum AS Order2
+from orders o1
+join orders o2
+on o1.cnum = o2.cnum        
+and o1.onum < o2.onum               
+join customers c on o1.cnum = c.cnum
+ORDER BY c.cname,o1.onum, o2.onum;
+
+-- 56. Find only those customers whose ratings are higher than every customer in Rome.
+
+select *
+from customers
+WHERE rating > all (
+    SELECT rating
+    from customers
+    where city = 'Rome'
+);
+
+-- 57. Write a query on the Customers table whose output will exclude all customers with a rating <= 100.00, unless they are located in Rome.
+
+select *
+from customers
+where rating > 100
+   or city = 'Rome';
+
+-- 58. Find all rows from the Customers table for which the salesperson number is 1001
+
+select * from customers 
+where snum = 1001;
+
+-- 59. Find the total amount in Orders for each salesperson for whom this total is greater than the amount of the largest order in the table.
+
+select snum, sum(amt) AS total_sales
+from orders
+group by snum
+having SUM(amt) > (
+    select MAX(amt)
+    from orders
+);
+
+-- 60. Write a query that selects all orders save those with zeroes or NULLs in the amount field.
+
+select * from orders 
+where amt in (0, NULL);
+
+-- 61. Produce all combinations of salespeople and customer names such that the former precedes the latter alphabetically, and the latter has a rating of less than 200
+
+select s.SNAME  Salesperson, c.CNAME Customer
+from salespeople s, customers c  
+where s.snum = c.cnum and
+c.rating < 200 and sname<cname; 
+
+-- 62. List all Salespeople’s names and the Commission they have earned.
+
+select distinct sname, comm
+from salespeople ;
+
+-- 63. Write a query that produces the names and cities of all customers with the same rating as Hoffman. Write the query using Hoffman’s CNUM rather than his rating, so that it would still be usable if his rating changed.
+
+
+select c.cname, c.city
+from customers c 
+where c.rating = (select rating from customers where cnum = 2001 );
+
+
+-- 64. Find all salespeople for whom there are customers that follow them in alphabetical order.
+
+select distinct s.sname
+from salespeople s
+join customers c on s.sname < c.cname;  
+
+-- 65 65. Write a query that produces the names and ratings of all customers of all who have above average orders.
+ 
+ select cname, rating, avg(amt) as AverageAmount
+ from customers c
+ left join orders o using(cnum)
+ group by cname, rating 
+ having avg(amt) > (select avg(amt) from orders);
+ 
+ 
+ -- 66. Find the SUM of all purchases from the Orders table.
+ 
+ select round(sum( o.amt),2) TotalPurchase from orders o ;
+ 
+-- 67. Write a SELECT command that produces the order number, amount and date for all rows in the order table.
+
+select onum, amt, odate
+from orders;
+
+-- 68. Count the number of nonNULL rating fields in the Customers table (including repeats).
+
+select count(rating)
+from customers 
+where rating IS NOT NULL;
+
+-- 69. Write a query that gives the names of both the salesperson and the customer for each order after the order number.
+
+select o.onum, s.sname Salesperson, c.cname Customer
+from orders o
+join salespeople s ON o.snum = s.snum  
+join customers c ON o.cnum = c.cnum;    
+
+-- 70. List the commissions of all salespeople servicing customers in London
+
+select DISTINCT s.comm
+from salespeople s
+join customers c ON s.snum = c.snum  
+where c.city = 'London';             
+
+-- 71. Write a query using ANY or ALL that will find all salespeople who have no customers located in their city.
+
+SELECT s.snum, s.sname
+FROM salespeople s
+WHERE NOT EXISTS (
+    SELECT 1
+    FROM customers c
+    WHERE c.snum = s.snum AND c.city = s.city
+);
+-- Usign All or ANY
+select * from salespeople s where s.city != all(select city from customers c where c.snum = s.snum);
+
+-- 72. Write a query using the EXISTS operator that selects all salespeople with customers located in their cities who are not assigned to them.
+
+SELECT s.snum, s.sname
+FROM salespeople s
+WHERE EXISTS (
+    SELECT 1
+    FROM customers c
+    WHERE c.city = s.city        
+      AND c.snum <> s.snum      
+);
+
+-- 73. Write a query that selects all customers serviced by Peel or Motika. (Hint : The SNUM field relates the two tables to one another.)
+
+select c.cnum, c.cname, c.city, c.rating
+from customers c
+where c.snum IN (
+    select s.snum
+    from  salespeople s
+    where s.sname IN ('Peel', 'Motika')
+);
+
+
+-- 74. Count the number of salespeople registering orders for each day. (If a salesperson has more than one order on a given day, he or she should be counted only once.)
+
+select o.odate, count(DISTINCT o.snum) AS salesperson_count
+from orders o
+group by o.odate;
+
+-- 75 Query to Find All Orders Attributed to Salespeople in London
+
+select o.onum, o.amt, o.odate, s.sname
+from orders o
+join salespeople s ON o.snum = s.snum  
+where s.city = 'London';                
+
+-- 76 Query to Find All Orders by Customers Not Located in the Same Cities as Their Salespeople
+
+select o.onum, o.amt, o.odate, c.cname, s.sname
+from orders o
+join customers c ON o.cnum = c.cnum  
+join salespeople s ON o.snum = s.snum 
+where c.city <> s.city;              
+
+-- 77 77. Find all salespeople who have customers with more than one current order.
+
+SELECT DISTINCT s.snum, s.sname
+FROM salespeople s
+JOIN customers c ON s.snum = c.snum            
+JOIN orders o ON c.cnum = o.cnum                
+GROUP BY s.snum, s.sname, c.cnum                
+HAVING COUNT(o.onum) > 1;                       
+
+-- 78. Write a query that extracts from the Customers table every customer assigned to a salesperson who currently has at least one other customer (besides the customer being selected) with orders in the Orders table.
+
+select c.cnum, c.cname, c.city, c.rating
+from customers c
+where c.snum IN (
+    select s.snum
+    from salespeople s
+    JOIN customers c2 ON s.snum = c2.snum      
+    JOIN orders o ON c2.cnum = o.cnum          
+    where c2.cnum <> c.cnum                    
+    group BY s.snum                             
+    having count(distinct o.onum) > 0          
+);
+
+
+-- 79. Write a query that selects all customers whose names begin with ‘C’.
+
+select * from customers
+where cname LIKE 'C%';
+
+-- 80. Write a query on the Customers table that will find the highest rating in each city. Put the output
+-- in this form : for the city (city) the highest rating is : (rating).
+
+select "for ",c.city, "The highest rating is :", max(c.rating) as HighestRating
+from customers c 
+group by c.city;
+ 
+-- Using concat
+select concat("for ",c.city, " The highest rating is : ", max(c.rating)) as HighestRating
+from customers c 
+group by c.city;
+
+-- 81 81. Write a query that will produce the SNUM values of all salespeople with orders currently in the Orders table (without any repeats).
+
+-- 82 Write a query that lists customers in descending order of rating. Output the rating field first, followed by the customer’s names and numbers.
+
+select c.rating, c.cname, c.cnum 
+from customers c 
+order by c.cname desc;
+
+-- 83.Find the average commission for salespeople in London.
+
+select avg(s.comm) as AverageComission 
+from salespeople s 
+where city = 'London';
+
+-- 84. Find all orders credited to the same salesperson who services Hoffman (CNUM 2001).
+
+select o.onum OrderNumber, s.sname SalesPerson , c.cname CustomerName
+from orders o 
+join customers c using(cnum)
+join salespeople s on o.snum = s.snum
+where c.cname = 'Hoffman';
+
+-- 85.85. Find all salespeople whose commission is in between 0.10 and 0.12 (both inclusive).
+
+select * from salespeople 
+where comm between 0.10 and 0.12;
+
+-- 86. Write a query that will give you the names and cities of all salespeople in London with a commission above 0.10.
+
+select s.sname, s.city, s.comm
+from salespeople s 
+where city = 'london' and comm >0.10;
+
+-- 87. What will be the output from the following query?
+SELECT * FROM ORDERS
+where (amt < 1000 OR NOT (odate = 10/03/1996 AND cnum >
+2003));
+
+/* The output will have order amount lesser than 1000 or (odate != 03 and cnum !- 2001,2)
+*/
+
+-- 88 88. Write a query that selects each customer’s smallest order.
+
+select distinct c.cname, min(o.amt) as SmallestOrder from 
+customers c 
+left join orders o using(cnum)
+group by c.cname
+order by SmallestOrder ASC;
+
+
+-- 89. Write a query that selects the first customer in alphabetical order
+
+select * from customers 
+order by cname ASC;
+
+-- 90. Write a query that counts the number of different nonNULL city values in the Customers table.
+
+
+select count(city) 
+from customers 
+where city is not null;
+
+-- 91 91. Find the average amount from the Orders table.
+
+select round(avg(amt),2) as AverageAmount
+from orders ;
+
+-- 92. What would be the output from the following query?
+SELECT * FROM ORDERS
+WHERE NOT (odate = 10/03/96 OR snum > 1006) AND amt >=1500;
+
+-- 93. Find all customers who are not located in San Jose and whose rating is above 200.
+
+select * from customers 
+where city <>'San JOse' and rating > 200;
+
+-- 94. Give a simpler way to write this query :
+SELECT snum, sname city, comm FROM salespeople
+WHERE (comm > 0.12 OR comm < 0.14);
+
+select * from salespeople 
+where comm is not null;	-- case where number > and < comes we get all output as result set 
+
+-- 95. Evaluate the following query :
+SELECT * FROM orders
+WHERE NOT ((odate = 10/03/96 AND snum > 1002) OR amt > 2000.00);
+
+-- 96. Which salespersons attend to customers not in the city they have been assigned to?
+
+-- 97. Which salespeople get commission greater than 0.11 are serving customers rated less than 250?
+
+-- 99. Which salesperson has earned the most by way of commission?
+
+select s.sname, round(max((o.amt * s.comm)),2) as MostCommission
+from salespeople s 
+inner join orders o using(snum)
+group by s.sname
+order by MostCommission DESC limit 1;
+-- 100.Does the customer who has placed the maximum number of orders have the maximum rating?
+
+-- 101.Has the customer who has spent the largest amount of money been given the highest rating?
+
+-- 102.List all customers in descending order of customer rating.
+
+select * from 
+customers 
+order by rating desc;
+
+-- 103.On which days has Hoffman placed orders?
+
+select o.odate, dayname(o.odate) as DayName
+from orders o 
+inner join customers c using(cnum)
+where c.cname = 'Hoffman';
+
+-- 104.104.Do all salespeople have different commissions?
+
+select count(*) as DifferentComission from salespeople s1 
+inner join salespeople s2 using(snum)
+where  s1.comm <> s2.comm;
+
+-- 105.Which salespeople have no orders between 10/03/1996 and 10/05/1996?
+
+select s.sname from salespeople s 
+left join orders o using(snum)
+where o.odate NOT IN ('1996-10-03','1996-10-05');
+
+-- 106.How many salespersons have succeeded in getting orders?
+select DISTINCT s.sname from salespeople s 
+left join orders o using(snum)
+where s.snum IN (select  o.snum from orders);
+
+-- 107.How many customers have placed orders?
+
+select DISTINCT c.cname from customers c 
+inner join orders o using(cnum)
+where c.cnum = o.cnum;
+
+-- 108.On which date has each salesperson booked an order of maximum value?
+
+SELECT o.snum, s.sname, o.odate, o.amt
+FROM orders o
+JOIN salespeople s ON o.snum = s.snum
+WHERE (o.snum, o.amt) IN (
+    SELECT snum, MAX(amt)
+    FROM orders
+    GROUP BY snum
+);	
+
+-- 109 109.Who is the most successful salesperson?
+
+
+select s.sname, round(sum(o.amt * s.comm)) as MostSuccessful
+from salespeople s 
+left join orders o using(snum)
+group by  s.sname
+order by MostSuccessful DESC LIMIT 1;
+
+-- 110.Who is the worst customer with respect to the company?
+
+select s.sname, round(sum(o.amt * s.comm)) as MostWorst
+from salespeople s 
+left join orders o using(snum)
+group by  s.sname
+order by MostWorst ASC LIMIT 1;
+
+-- 111.Are all customers not having placed orders greater than 200 totally been serviced by salespersons Peel or Serres?
+
+select c.cnum
+from  Customers c
+left join Orders o ON c.cnum = o.cnum
+where o.amt <= 200
+and c.cname not in ('Peel', 'Serres');
+
+-- 112.Which customers have the same rating?
+
+select  c1.cname Customer1 ,c2.cname Customer2,  c2.rating from customers c1
+cross join customers c2 using(rating)
+where c1.cnum < c2.cnum;
+
+
+-- 113 113.Find all orders greater than the average for October 4th.
+
+select * from orders o 
+where amt > (select avg(amt) from orders where odate = '1996-10-04') and odate = '1996-10-04' ;
+
+-- 114.Which customers have above average orders?
+
+select * from orders o 
+where amt > (select avg(amt) from orders);
+
+-- 115.List all customers with ratings above San Jose’s average.
+
+select * from 
+customers c 
+where rating > (select avg(rating) from customers );
+
+-- 116.Select the total amount in orders for each salesperson for whom the total is greater than the amount of the largest order in the table.
+
+select s.sname, round(sum(o.amt),2) as LargestOrder
+from salespeople s 
+left join orders o using(snum)
+group by s.sname
+having sum(o.amt) > (select max(amt) from orders);
+
+
+-- 117.Give names and numbers of all salespersons
+
+select DISTINCT s.snum Numbers, s.sname SalesPerson from salespeople s;
+
+-- 118.Select all salespersons by name and number who have customers in their city whom they don’t service.
+
+select s.snum, s.sname
+from salespeople s
+where exists (
+    select  1 
+    from customers c
+    where c.city = s.city and c.snum <> s.snum
+);
+
+-- 119.Which customers’ rating should be lowered?
+
+
+
+
+-- 120.Is there a case for assigning a salesperson to Berlin?
+
+select COUNT(o.onum) AS OrderInBerlin
+from orders o
+left join customers c using(cnum)
+where c.city = 'Berlin';
+
+-- 121.Is there any evidence linking the performance of a salesperson to the commission that he or she is being paid?
+
+select s.sname, s.comm, count(o.onum) as OrderCount, max(o.amt) MaximumAmountOrder from salespeople s 
+inner join orders o using(snum)
+group by s.sname, s.comm;
+
+
+-- 122.Does the total amount in orders by customer in Rome and London exceed the commission paid to salespersons in London and New York by more than 5 times?
+
+
+-- 123.Which is the date, order number, amt and city for each salesperson (by name) for the maximum order he has obtained?
+
+select s.sname, o.odate, o.onum, o.amt, c.city
+from orders o
+inner join customers c using(cnum)
+inner join  salespeople s using(snum)
+where o.amt = (
+    select MAX(o2.amt)
+    from orders o2
+    where o2.snum = o.snum
+)
+order by s.sname;
+
+
+-- 124.Which salesperson(s) should be fired?
+select s.snum, s.sname
+from salespeople s
+where not exists (
+    select 1
+    from orders o
+    where o.snum = s.snum
+);
+
+-- 125.What is the total income for the company?
+select SUM(o.amt) AS total_income
+from orders o;
+
+
+
+-- 
+
+
+
+create table example(id TINYINT, name varchar(5));
+
+insert into example values(288, "Pranay");
+	-- Error Code: 1264. Out of range value for column 'id' at row 1
+
+insert into example values(-1, "Yash");
+insert into example values(-130, "Yash");
+	-- Error Code: 1264. Out of range value for column 'id' at row 1
+
+select * from example;
+insert into example values(-130, "Yash");
+
+
+create table EX1(id TINYINT, name varchar(5));
+insert into example values(-2, "Pranay");
+
+insert into example values(12, "Hemant");
+
+-- restrictions 
+-- Create view sand check whether you can delete a record from tables or not if there are more than 2 joins 
+create view view1
+as 
+(select * from salespeople s
+join orders o using(snum));
+
+select * from view1;
+ 
+ 
+delete from view1 where city = 'New York';
+
+
+create view view2
+as 
+(select * from example s);
+
+
+select * from view2;
+
+-- delete from view and record gets deleted as its an single tbale 
+delete from example where name = 'Yash';
+
+-- verfying the above statement
+select * from view2;
+
+select * from example;
+
+
+-- 2nd restriction 
+select * from view1;
+
+insert into view1(SNUM, SNAME, CITY, COMM, onum, amt, odate, cnum) values(1008, 'Pranay','California',0.50,3010, 100.20, '1996-10-20',2000), 
+						(1009, 'Yash','New York',0.20,3012, 50.20, '1996-10-25',2012);
+	-- error -- Error Code: 1393. Can not modify more than one base table through a join view 'practiceset.view1'
+-- 3rd rest 
+	-- if view having group by clause, having, then we cannot perform update 
+    
+use practiceset;
+create view view3
+as 
+(select sname, count(*) as CountEmployee from salespeople group by sname having count(*) >= 1 );
+
+
+select * from view3;
+
+insert into view3(sname, CountEmployee) values('Pranay', 199);
+	-- Error Code: 1471. The target table view3 of the INSERT is not insertable-into
+
+-- 
+
+CREATE TABLE parts (
+    partid VARCHAR(10) PRIMARY KEY,
+    parentpartid VARCHAR(10)
+);
+
+INSERT INTO parts (partid, parentpartid) VALUES
+('A', 'A'),  
+('B', 'A'),  
+('C', 'A'),  
+('D', 'B'),  
+('E', 'B'),  
+('F', 'C'),  
+('G', 'D');  
+
+
+WITH RECURSIVE tab AS (
+    SELECT 
+        partid AS originalpartid, 
+        parentpartid AS immediateparent, 
+        parentpartid AS topmostparent, 
+        0 AS level
+    FROM parts
+    UNION ALL
+    SELECT 
+        p.partid AS originalpartid, 
+        p.parentpartid AS immediateparent, 
+        t.immediateparent AS topmostparent, 
+        t.level + 1 AS level
+    FROM tab t
+    JOIN parts p 
+    ON t.topmostparent = p.partid
+    WHERE p.partid <> p.parentpartid
+)
+SELECT * FROM tab;
+
+
+
+
+
+select routine_name from information_schema.routines where routine_schema = 'HR';
+
+show variables like 'transaction_isolation';
+
+	
 
 
 

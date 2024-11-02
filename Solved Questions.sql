@@ -1748,15 +1748,10 @@ SOLUTION \
 SELECT payment_id
 FROM payment
 WHERE payment_id LIKE '_1%';
-https://labs.odinschool.com/practice-grounds/sql/3zk8w6a3z/8-foundation-w3d1-ct
 
-8. Foundation-W3D1-CT
-Classroom Tasks (QFC31)
 -- ----------------------------------------------------------------------------------------------------------------------------
-https://labs.odinschool.com/practice-grounds/sql/3znkq8cvh/23-advanced-w2d2-ct
-23-advanced-w2d2-ct
 
-81.Create a temporary table named TempOrders that contains Order_id and Order_Date from the orders table and show the complete TempOrders table.
+-- 81.Create a temporary table named TempOrders that contains Order_id and Order_Date from the orders table and show the complete TempOrders table.
 
 Table name: orders
 
